@@ -1,19 +1,90 @@
-<form id="formulario">
-  <input name="Nombre" placeholder="Nombre" required><br>
-  <input name="Fecha" type="date" required><br>
-  <input name="HoraIngreso" type="time" required><br>
-  <button type="submit">Enviar</button>
-</form>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Registro de Horas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      height: 100vh;
+      align-items: center;
+      justify-content: center;
+    }
+    .form-container {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #007BFF;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .success {
+      color: green;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Registro de Ingreso</h2>
+    <form id="formulario">
+      <input type="text" name="Nombre" placeholder="Ingresa tu nombre" required />
+      <input type="hidden" name="Fecha" id="fecha">
+      <input type="hidden" name="HoraIngreso" id="hora">
+      <button type="submit">Registrar</button>
+    </form>
+    <div id="mensaje" class="success"></div>
+  </div>
 
-<script>
-  const scriptURL = 'https://script.google.com/macros/s/AKfycbxnyxtP7hH-IgO53ziygs5JkPbzYk3yA4D1Z9Wrn7e3CQarx9hLkktY8AHlDgznQkgBRQ/exec';
-  const form = document.getElementById('formulario');
-  
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    fetch(scriptURL, { method: 'POST', body: new FormData(form) })
-      .then(res => res.json())
-      .then(data => alert(data.message))
-      .catch(err => alert('Error: ' + err));
-  });
-</script>
+  <script>
+    const scriptURL = 'TU_URL_DEL_SCRIPT';
+    const form = document.getElementById('formulario');
+    const fechaInput = document.getElementById('fecha');
+    const horaInput = document.getElementById('hora');
+    const mensaje = document.getElementById('mensaje');
+
+    function getFechaYHoraActual() {
+      const ahora = new Date();
+      const fecha = ahora.toISOString().split('T')[0];
+      const hora = ahora.toTimeString().split(' ')[0].slice(0,5);
+      return { fecha, hora };
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+
+      const { fecha, hora } = getFechaYHoraActual();
+      fechaInput.value = fecha;
+      horaInput.value = hora;
+
+      fetch(scriptURL, { method: 'POST', body: new FormData(form) })
+        .then(res => res.json())
+        .then(data => {
+          mensaje.textContent = data.message;
+          form.reset();
+        })
+        .catch(err => {
+          mensaje.textContent = 'Error al registrar. Intenta de nuevo.';
+        });
+    });
+  </script>
+</body>
+</html>

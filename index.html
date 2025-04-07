@@ -1,54 +1,19 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Registro de Horas</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f0f0f0;
-      padding: 20px;
-    }
-    form {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 400px;
-      margin: auto;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    input, button {
-      width: 100%;
-      margin-bottom: 15px;
-      padding: 10px;
-    }
-  </style>
-</head>
-<body>
-  <h2 style="text-align:center;">Registro de Horas</h2>
-  <form id="registroForm">
-    <label for="nombre">Nombre:</label>
-    <input type="text" id="nombre" name="Nombre" required>
+<form id="formulario">
+  <input name="Nombre" placeholder="Nombre" required><br>
+  <input name="Fecha" type="date" required><br>
+  <input name="HoraIngreso" type="time" required><br>
+  <button type="submit">Enviar</button>
+</form>
 
-    <label for="fecha">Fecha:</label>
-    <input type="date" id="fecha" name="Fecha" required>
-
-    <label for="horaIngreso">Hora de Ingreso:</label>
-    <input type="time" id="horaIngreso" name="HoraIngreso" required>
-
-    <button type="submit">Registrar</button>
-  </form>
-
-  <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxuHrY9vG23POsx91MtAre1zxEGC0MsmOXkUs3e7XJQsViWOzET9t-5j6TRwKa8Y5Kb3Q/exec';
-    const form = document.getElementById('registroForm');
-
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      fetch(scriptURL, { method: 'POST', body: new FormData(form)})
-        .then(response => alert('¡Registro exitoso!'))
-        .catch(error => alert('Error al registrar: ' + error.message));
-    });
-  </script>
-</body>
-</html>
+<script>
+  const scriptURL = 'Íhttps://script.google.com/macros/s/AKfycbxuHrY9vG23POsx91MtAre1zxEGC0MsmOXkUs3e7XJQsViWOzET9t-5j6TRwKa8Y5Kb3Q/exec;
+  const form = document.getElementById('formulario');
+  
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    fetch(scriptURL, { method: 'POST', body: new FormData(form) })
+      .then(res => res.json())
+      .then(data => alert(data.message))
+      .catch(err => alert('Error: ' + err));
+  });
+</script>

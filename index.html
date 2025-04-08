@@ -18,8 +18,17 @@
       padding: 2rem;
       border-radius: 10px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 400px;
     }
-    input, button {
+    .logo {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .logo img {
+      max-height: 60px;
+    }
+    select, input, button {
       width: 100%;
       padding: 10px;
       margin-top: 10px;
@@ -27,88 +36,95 @@
       border: 1px solid #ccc;
     }
     button {
-      background-color: #28a745;
+      background-color: #007bff;
       color: white;
       font-weight: bold;
       border: none;
       cursor: pointer;
     }
     button:hover {
-      background-color: #218838;
-    }
-    #salidaBtn {
-      background-color: #ffc107;
-      margin-top: 5px;
-    }
-    #salidaBtn:hover {
-      background-color: #e0a800;
+      background-color: #0056b3;
     }
     .success {
       color: green;
       margin-top: 1rem;
       text-align: center;
     }
+    .summary {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #333;
+    }
   </style>
 </head>
 <body>
   <div class="form-container">
-    <h2>Registro de Ingreso / Salida</h2>
-    <form id="formulario">
-      <input type="text" name="Nombre" placeholder="Tu nombre" required />
+    <div class="logo">
+      <img src="https://yourdomain.com/logo.png" alt="Logo Empresa" />
+    </div>
+    <h3>Registro de Jornada</h3>
+    <form id="registroForm">
+      <select name="Nombre" required>
+        <option value="" disabled selected>Selecciona tu nombre</option>
+        <option value="Carlos">Carlos</option>
+        <option value="Lucía">Lucía</option>
+        <option value="María">María</option>
+        <option value="Pedro">Pedro</option>
+      </select>
+
+      <select name="TipoJornada" required>
+        <option value="" disabled selected>Tipo de jornada</option>
+        <option value="Entrada">Entrada</option>
+        <option value="Almuerzo">Almuerzo</option>
+        <option value="Salida">Salida</option>
+      </select>
+
       <input type="hidden" name="Fecha" id="fecha">
-      <input type="hidden" name="HoraIngreso" id="horaIngreso">
-      <input type="hidden" name="HoraSalida" id="horaSalida">
-      <button type="submit" id="ingresoBtn">Registrar Ingreso</button>
-      <button type="button" id="salidaBtn">Registrar Salida</button>
+      <input type="hidden" name="Hora" id="hora">
+
+      <button type="submit">Registrar</button>
     </form>
     <div id="mensaje" class="success"></div>
+    <div id="resumen" class="summary"></div>
   </div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxnNa6VA4wkkLxto6gLW4_MpaGRlGC2QyOF139k-gweQSk-Lci0k5JOXGyfVllO3bR-PA/exec';
-    const form = document.getElementById('formulario');
+    const form = document.getElementById('registroForm');
     const fechaInput = document.getElementById('fecha');
-    const horaIngresoInput = document.getElementById('horaIngreso');
-    const horaSalidaInput = document.getElementById('horaSalida');
+    const horaInput = document.getElementById('hora');
     const mensaje = document.getElementById('mensaje');
-    const ingresoBtn = document.getElementById('ingresoBtn');
-    const salidaBtn = document.getElementById('salidaBtn');
+    const resumen = document.getElementById('resumen');
 
-    function getFechaYHoraActual() {
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyvmT1JciGyCKn-evTt3I53mxE3xt1GBCOpBUvE8Dm6LGqZpSUz0H9kjCfKrRjU9yTxTw/exec';
+
+    function getFechaHora() {
       const ahora = new Date();
       const fecha = ahora.toISOString().split('T')[0];
-      const hora = ahora.toTimeString().split(' ')[0].slice(0,5);
+      const hora = ahora.toTimeString().split(' ')[0].slice(0, 5);
       return { fecha, hora };
     }
 
-    ingresoBtn.addEventListener('click', e => {
+    form.addEventListener('submit', e => {
       e.preventDefault();
-      const { fecha, hora } = getFechaYHoraActual();
+      const { fecha, hora } = getFechaHora();
       fechaInput.value = fecha;
-      horaIngresoInput.value = hora;
-      horaSalidaInput.value = '';
-      enviarFormulario();
-    });
+      horaInput.value = hora;
 
-    salidaBtn.addEventListener('click', () => {
-      const { fecha, hora } = getFechaYHoraActual();
-      fechaInput.value = fecha;
-      horaIngresoInput.value = '';
-      horaSalidaInput.value = hora;
-      enviarFormulario();
-    });
+      const datos = new FormData(form);
 
-    function enviarFormulario() {
-      fetch(scriptURL, { method: 'POST', body: new FormData(form) })
+      fetch(scriptURL, { method: 'POST', body: datos })
         .then(res => res.json())
         .then(data => {
           mensaje.textContent = data.message;
+          if (data.resumen) {
+            resumen.innerHTML = `<strong>Hoy:</strong> ${data.resumen}`;
+          }
           form.reset();
         })
-        .catch(err => {
-          mensaje.textContent = 'Error al registrar.';
+        .catch(error => {
+          mensaje.textContent = 'Error al registrar. Inténtalo de nuevo.';
         });
-    }
+    });
   </script>
 </body>
 </html>

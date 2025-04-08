@@ -27,39 +27,52 @@
       border: 1px solid #ccc;
     }
     button {
-      background-color: #007BFF;
+      background-color: #28a745;
       color: white;
       font-weight: bold;
       border: none;
       cursor: pointer;
     }
     button:hover {
-      background-color: #0056b3;
+      background-color: #218838;
+    }
+    #salidaBtn {
+      background-color: #ffc107;
+      margin-top: 5px;
+    }
+    #salidaBtn:hover {
+      background-color: #e0a800;
     }
     .success {
       color: green;
       margin-top: 1rem;
+      text-align: center;
     }
   </style>
 </head>
 <body>
   <div class="form-container">
-    <h2>Registro de Ingreso</h2>
+    <h2>Registro de Ingreso / Salida</h2>
     <form id="formulario">
-      <input type="text" name="Nombre" placeholder="Ingresa tu nombre" required />
+      <input type="text" name="Nombre" placeholder="Tu nombre" required />
       <input type="hidden" name="Fecha" id="fecha">
-      <input type="hidden" name="HoraIngreso" id="hora">
-      <button type="submit">Registrar</button>
+      <input type="hidden" name="HoraIngreso" id="horaIngreso">
+      <input type="hidden" name="HoraSalida" id="horaSalida">
+      <button type="submit" id="ingresoBtn">Registrar Ingreso</button>
+      <button type="button" id="salidaBtn">Registrar Salida</button>
     </form>
     <div id="mensaje" class="success"></div>
   </div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxnyxtP7hH-IgO53ziygs5JkPbzYk3yA4D1Z9Wrn7e3CQarx9hLkktY8AHlDgznQkgBRQ/exec';
+    const scriptURL = 'TU_URL_DEL_SCRIPT';
     const form = document.getElementById('formulario');
     const fechaInput = document.getElementById('fecha');
-    const horaInput = document.getElementById('hora');
+    const horaIngresoInput = document.getElementById('horaIngreso');
+    const horaSalidaInput = document.getElementById('horaSalida');
     const mensaje = document.getElementById('mensaje');
+    const ingresoBtn = document.getElementById('ingresoBtn');
+    const salidaBtn = document.getElementById('salidaBtn');
 
     function getFechaYHoraActual() {
       const ahora = new Date();
@@ -68,13 +81,24 @@
       return { fecha, hora };
     }
 
-    form.addEventListener('submit', e => {
+    ingresoBtn.addEventListener('click', e => {
       e.preventDefault();
-
       const { fecha, hora } = getFechaYHoraActual();
       fechaInput.value = fecha;
-      horaInput.value = hora;
+      horaIngresoInput.value = hora;
+      horaSalidaInput.value = '';
+      enviarFormulario();
+    });
 
+    salidaBtn.addEventListener('click', () => {
+      const { fecha, hora } = getFechaYHoraActual();
+      fechaInput.value = fecha;
+      horaIngresoInput.value = '';
+      horaSalidaInput.value = hora;
+      enviarFormulario();
+    });
+
+    function enviarFormulario() {
       fetch(scriptURL, { method: 'POST', body: new FormData(form) })
         .then(res => res.json())
         .then(data => {
@@ -82,9 +106,9 @@
           form.reset();
         })
         .catch(err => {
-          mensaje.textContent = 'Error al registrar. Intenta de nuevo.';
+          mensaje.textContent = 'Error al registrar.';
         });
-    });
+    }
   </script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Registro de Jornada</title>
+  <title>Registro de Jornada con Foto</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
@@ -12,49 +12,26 @@
       max-width: 600px;
       margin: auto;
     }
-
-    h2 {
-      color: #1a73e8;
-      text-align: center;
-    }
-
-    label {
-      margin-top: 15px;
-      display: block;
-      font-weight: bold;
-    }
-
-    select, button, canvas {
+    video, canvas {
       width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      box-sizing: border-box;
-    }
-
-    #firmaCanvas {
+      max-height: 200px;
       border: 1px solid #ccc;
-      height: 150px;
+      margin-top: 10px;
     }
-
     #resumen {
       margin-top: 20px;
       background: #e0f7fa;
       padding: 10px;
       border-radius: 5px;
     }
-
     button {
+      margin-top: 10px;
+      padding: 10px;
       background-color: #007bff;
       color: white;
-      font-weight: bold;
       border: none;
+      width: 100%;
       cursor: pointer;
-    }
-
-    .limpiar {
-      background-color: #ccc;
-      color: black;
-      margin-top: 10px;
     }
   </style>
 </head>
@@ -79,34 +56,28 @@
       <option value="Salida">Salida</option>
     </select>
 
-    <label for="firma">Firma digital:</label>
-    <canvas id="firmaCanvas"></canvas>
-    <button type="button" class="limpiar" onclick="limpiarFirma()">Limpiar firma</button>
-
-    <input type="hidden" id="firmaBase64">
-    <input type="hidden" id="fecha">
-    <input type="hidden" id="hora">
+    <video id="video" autoplay></video>
+    <canvas id="fotoCanvas" style="display:none;"></canvas>
+    <input type="hidden" id="fotoBase64">
 
     <button type="submit">Registrar</button>
   </form>
 
   <div id="resumen"></div>
 
-  <!-- Firma Digital -->
-  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
-
   <script>
-    const canvas = document.getElementById('firmaCanvas');
-    const signaturePad = new SignaturePad(canvas);
-    function limpiarFirma() {
-      signaturePad.clear();
-    }
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('fotoCanvas');
+    const context = canvas.getContext('2d');
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwtEISKOzotEBN4qXhiKoygYbokiTuMNkfgXWS0qeLSjZuVlMICml8szjcMYWqqy07HPA/exec'; // ← pega tu URL del Apps Script
 
-    const form = document.getElementById('formulario');
-    const resumen = document.getElementById('resumen');
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbz5cDh7_yuozDSugatNYDKKyQGflkofVAghzWugH-bw-s9wZq76BpLbjHywNYogY2Bqyw/exec'; // ← Reemplaza por tu URL de Google Apps Script
+    // Activar cámara
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => video.srcObject = stream)
+      .catch(err => alert("No se pudo acceder a la cámara: " + err));
 
-    form.addEventListener('submit', function (e) {
+    // Registrar formulario
+    document.getElementById('formulario').addEventListener('submit', function (e) {
       e.preventDefault();
 
       const nombre = document.getElementById('nombre').value;
@@ -115,26 +86,18 @@
       const hora = new Date().toLocaleTimeString();
       const clave = `${nombre}_${fecha}_${tipo}`;
 
-      // Validar duplicado local
       if (localStorage.getItem(clave)) {
         alert(`Ya registraste tu ${tipo.toLowerCase()} hoy.`);
         return;
       }
 
-      // Validar firma
-      if (signaturePad.isEmpty()) {
-        alert("Por favor, firma antes de enviar.");
-        return;
-      }
+      // Tomar foto
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const fotoBase64 = canvas.toDataURL("image/jpeg");
 
-      const firmaBase64 = signaturePad.toDataURL();
-
-      // Obtener GPS
-      if (!navigator.geolocation) {
-        alert("Tu navegador no soporta GPS.");
-        return;
-      }
-
+      // Obtener ubicación
       navigator.geolocation.getCurrentPosition(pos => {
         const gps = `${pos.coords.latitude.toFixed(4)},${pos.coords.longitude.toFixed(4)}`;
 
@@ -144,34 +107,28 @@
           Fecha: fecha,
           Hora: hora,
           GPS: gps,
-          Firma: firmaBase64
+          Foto: fotoBase64
         });
 
-        fetch(scriptURL, {
-          method: 'POST',
-          body: datos
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === 'success') {
-            localStorage.setItem(clave, hora);
-            resumen.innerHTML = `
-              ✅ <strong>Registro exitoso</strong><br>
-              <b>Empleado:</b> ${nombre}<br>
-              <b>Jornada:</b> ${tipo}<br>
-              <b>Hora:</b> ${hora}<br>
-              <b>Ubicación:</b> ${gps}<br><br>
-              <b>Resumen del día:</b><br>${data.resumen}
-            `;
-            form.reset();
-            signaturePad.clear();
-          } else {
-            alert("Error: " + data.message);
-          }
-        });
-
+        fetch(scriptURL, { method: 'POST', body: datos })
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === 'success') {
+              localStorage.setItem(clave, hora);
+              document.getElementById('resumen').innerHTML = `
+                ✅ <strong>Registro exitoso</strong><br>
+                <b>Empleado:</b> ${nombre}<br>
+                <b>Jornada:</b> ${tipo}<br>
+                <b>Hora:</b> ${hora}<br>
+                <b>Ubicación:</b> ${gps}<br><br>
+                <b>Resumen del día:</b><br>${data.resumen}
+              `;
+            } else {
+              alert("Error: " + data.message);
+            }
+          });
       }, () => {
-        alert("No se pudo obtener tu ubicación.");
+        alert("No se pudo obtener la ubicación.");
       });
     });
   </script>

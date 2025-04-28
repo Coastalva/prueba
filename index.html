@@ -3,120 +3,152 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Registro de Horas - Google Sheets</title>
+  <title>Registro de Horas COASTAL VA MARINE </title>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; background-color: #f3f6f9; padding: 20px; max-width: 800px; margin: auto; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f3f6f9; padding: 20px; max-width: 800px; margin: auto; }
     h1 { text-align: center; color: #01487d; }
-    form { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
-    .employee-row { display: flex; align-items: center; margin-bottom: 10px; }
-    .employee-row label { flex: 1; }
-    .employee-row input[type=checkbox] { margin-right: 10px; }
-    .section { margin-top: 20px; }
-    select, textarea, button { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; }
-    button { background-color: #007bff; color: #fff; font-weight: bold; cursor: pointer; }
-    button:hover { background-color: #0056b3; }
+    .section { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); margin-top: 20px; }
+    label { display: block; margin-bottom: 5px; font-weight: 600; }
+    select, input[type=text], textarea, button { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; }
+    button { background: #007bff; color: #fff; font-weight: bold; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    video { display: block; width: 100%; max-height: 200px; margin: 15px 0; border-radius: 6px; }
     #resumen { margin-top: 20px; background: #e6f4f1; padding: 15px; border-left: 5px solid #34a853; border-radius: 6px; }
   </style>
 </head>
 <body>
-  <h1>Registro de Horas (Google Sheets)</h1>
-  <form id="registroForm">
-    <div class="section">
-      <h2>Entrada</h2>
-      <div id="listaEmpleados"></div>
-    </div>
-    <div class="section">
-      <label for="proyecto">Proyecto actual:</label>
-      <select id="proyecto" required>
-        <option value="">Selecciona proyecto</option>
-        <option value="Proyecto A">Proyecto A</option>
-        <option value="Proyecto B">Proyecto B</option>
-        <option value="Proyecto C">Proyecto C</option>
-      </select>
-      <label><input type="checkbox" id="cambioProyecto" /> ¿Cambiar proyecto?</label>
-      <select id="nuevoProyecto" style="display:none;">
-        <option value="">Selecciona nuevo proyecto</option>
-        <option value="Proyecto A">Proyecto A</option>
-        <option value="Proyecto B">Proyecto B</option>
-        <option value="Proyecto C">Proyecto C</option>
-      </select>
-    </div>
-    <div class="section">
-      <h2>Salida</h2>
-      <label><input type="checkbox" id="checkSalida" /> Registrar salida</label>
-    </div>
-    <div class="section">
-      <label for="notas">Notas del encargado:</label>
-      <textarea id="notas" rows="4" placeholder="Especifica qué se realizó..."></textarea>
-    </div>
-    <button type="submit">Enviar registro</button>
-  </form>
+  <h1>Registro de Horas</h1>
+
+  <!-- Video/canvas para foto -->
+  <video id="video" autoplay playsinline style="display:none;"></video>
+  <canvas id="fotoCanvas" style="display:none;"></canvas>
+
+  <!-- SECCIÓN 1: Entrada -->
+  <div id="entrySection" class="section">
+    <h2>Registro de Entrada</h2>
+    <div id="listaEmpleadosEntrada"></div>
+    <button id="submitEntry" type="button">Registrar Entrada</button>
+  </div>
+
+  <!-- SECCIÓN 2: Cambio de Proyecto -->
+  <div id="projectSection" class="section" style="display:none;">
+    <h2>Cambio de Proyecto</h2>
+    <label for="empCambio">Empleado:</label>
+    <select id="empCambio">
+      <option value="">Selecciona empleado</option>
+    </select>
+    <label for="nuevoProyecto">Nuevo Proyecto:</label>
+    <input type="text" id="nuevoProyecto" placeholder="Escribe el nombre del nuevo proyecto" />
+    <button id="submitCambio" type="button">Registrar Cambio</button>
+  </div>
+
+  <!-- SECCIÓN 3: Salida -->
+  <div id="exitSection" class="section" style="display:none;">
+    <h2>Registro de Salida</h2>
+    <div id="listaEmpleadosSalida"></div>
+    <button id="submitExit" type="button">Registrar Salida</button>
+  </div>
+
   <div id="resumen"></div>
+
   <script>
-    // URL de tu Google Apps Script
     const scriptURL = 'https://script.google.com/macros/s/AKfycbwn0GkyY9daL2zRQgnxx5Fr9UnVfU7MfzbUKZuFlp5lQqhhrAutlGPG_MxizY6x7RwVNg/exec';
-
     const empleados = ['Cesar', 'Denis', 'Donald', 'Brayan', 'Angel', 'Jeferson', 'Lorenzo'];
-    const lista = document.getElementById('listaEmpleados');
+
+    // Inicializar lista de checkboxes para entrada y salida
+    const listaEnt = document.getElementById('listaEmpleadosEntrada');
+    const listaSal = document.getElementById('listaEmpleadosSalida');
     empleados.forEach(name => {
-      const row = document.createElement('div');
-      row.className = 'employee-row';
-      row.innerHTML = `<input type="checkbox" class="checkEntrada" value="${name}" /><label>${name}</label>`;
-      lista.appendChild(row);
+      const rowEnt = document.createElement('div');
+      rowEnt.innerHTML = `<label><input type="checkbox" class="ent" value="${name}" /> ${name}</label>`;
+      listaEnt.appendChild(rowEnt);
+      const rowSal = document.createElement('div');
+      rowSal.innerHTML = `<label><input type="checkbox" class="sal" value="${name}" /> ${name}</label>`;
+      listaSal.appendChild(rowSal);
     });
 
-    document.getElementById('cambioProyecto').addEventListener('change', e => {
-      document.getElementById('nuevoProyecto').style.display = e.target.checked ? 'block' : 'none';
+    // Dropdown para cambio de proyecto
+    const selCambio = document.getElementById('empCambio');
+    empleados.forEach(name => {
+      const opt = document.createElement('option'); opt.value = name; opt.text = name;
+      selCambio.appendChild(opt);
     });
 
-    document.getElementById('registroForm').addEventListener('submit', e => {
-      e.preventDefault();
+    // Inicializar cámara
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('fotoCanvas');
+    const ctx = canvas.getContext('2d');
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => video.srcObject = stream)
+      .catch(()=>alert('No se pudo acceder a la cámara.'));
 
-      const seleccionados = Array.from(document.querySelectorAll('.checkEntrada:checked')).map(cb => cb.value);
-      if (!seleccionados.length) return alert('Selecciona al menos un empleado para registrar entrada.');
-
-      const fecha = new Date().toISOString().split('T')[0];
-      const horaEntrada = new Date().toLocaleTimeString('es-ES', { hour12: false, timeZone: 'America/New_York' });
-
-      let proyecto = document.getElementById('proyecto').value;
-      if (document.getElementById('cambioProyecto').checked) {
-        proyecto = document.getElementById('nuevoProyecto').value || proyecto;
-      }
-
-      let horaSalida = '';
-      if (document.getElementById('checkSalida').checked) {
-        horaSalida = new Date().toLocaleTimeString('es-ES', { hour12: false, timeZone: 'America/New_York' });
-      }
-
-      const notas = document.getElementById('notas').value;
-
-      const datos = new URLSearchParams({
-        Fecha: fecha,
-        Empleados: seleccionados.join(', '),
-        HoraEntrada: horaEntrada,
-        Proyecto: proyecto,
-        HoraSalida: horaSalida,
-        Notas: notas
+    // Helpers
+    function capturePhoto() {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0);
+      return canvas.toDataURL('image/jpeg');
+    }
+    function getLocation() {
+      return new Promise((res, rej) => {
+        navigator.geolocation.getCurrentPosition(p => {
+          res(`${p.coords.latitude.toFixed(4)},${p.coords.longitude.toFixed(4)}`);
+        }, ()=> rej('GPS error'));
       });
+    }
+    function sendRegistro(payload) {
+      return fetch(scriptURL, { method:'POST', body: new URLSearchParams(payload) })
+        .then(r=>r.json());
+    }
 
-      fetch(scriptURL, { method: 'POST', body: datos })
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === 'success') {
-            document.getElementById('resumen').innerHTML = `✅ <strong>Registro exitoso</strong><br>
-              <b>Fecha:</b> ${fecha}<br>
-              <b>Empleados:</b> ${seleccionados.join(', ')}<br>
-              <b>Entrada:</b> ${horaEntrada}<br>
-              <b>Proyecto:</b> ${proyecto}<br>
-              ${horaSalida ? `<b>Salida:</b> ${horaSalida}<br>` : ''}
-              <b>Notas:</b> ${notas}`;
-            document.getElementById('registroForm').reset();
-            document.getElementById('nuevoProyecto').style.display = 'none';
-          } else {
-            alert('Error: ' + data.message);
-          }
-        })
-        .catch(err => alert('Error de red: ' + err));
+    // 1) Entrada
+    document.getElementById('submitEntry').addEventListener('click', async () => {
+      const seleccionados = Array.from(document.querySelectorAll('.ent:checked')).map(cb=>cb.value);
+      if (!seleccionados.length) return alert('Selecciona al menos un empleado.');
+      document.getElementById('video').style.display = 'block';
+      const foto = capturePhoto();
+      document.getElementById('video').style.display = 'none';
+      let gps = '';
+      try { gps = await getLocation(); } catch{};
+
+      const payload = { TipoRegistro:'Entrada', Fecha: new Date().toISOString(), Empleados: seleccionados.join(', '), Ubicacion: gps, Foto: foto };
+      const res = await sendRegistro(payload);
+      if (res.status==='success') {
+        document.getElementById('resumen').innerHTML = `✅ Entrada registrada para ${seleccionados.join(', ')}.`;
+        document.getElementById('entrySection').style.display='none';
+        document.getElementById('projectSection').style.display='block';
+      } else alert('Error: '+res.message);
+    });
+
+    // 2) Cambio de proyecto
+    document.getElementById('submitCambio').addEventListener('click', async () => {
+      const emp = selCambio.value;
+      const proj = document.getElementById('nuevoProyecto').value.trim();
+      if (!emp || !proj) return alert('Selecciona empleado y escribe nuevo proyecto.');
+      const payload = { TipoRegistro:'CambioProyecto', Fecha: new Date().toISOString(), Empleado: emp, ProyectoNuevo: proj };
+      const res = await sendRegistro(payload);
+      if (res.status==='success') {
+        document.getElementById('resumen').innerHTML += `<br>✅ Cambio de proyecto de ${emp} a ${proj}.`;
+        document.getElementById('projectSection').style.display='none';
+        document.getElementById('exitSection').style.display='block';
+      } else alert('Error: '+res.message);
+    });
+
+    // 3) Salida
+    document.getElementById('submitExit').addEventListener('click', async () => {
+      const seleccionados = Array.from(document.querySelectorAll('.sal:checked')).map(cb=>cb.value);
+      if (!seleccionados.length) return alert('Selecciona al menos un empleado.');
+      document.getElementById('video').style.display = 'block';
+      const foto = capturePhoto();
+      document.getElementById('video').style.display = 'none';
+      let gps = '';
+      try { gps = await getLocation(); } catch{};
+      const payload = { TipoRegistro:'Salida', Fecha: new Date().toISOString(), Empleados: seleccionados.join(', '), Ubicacion: gps, Foto: foto };
+      const res = await sendRegistro(payload);
+      if (res.status==='success') {
+        document.getElementById('resumen').innerHTML += `<br>✅ Salida registrada para ${seleccionados.join(', ')}.`;
+        document.getElementById('exitSection').style.display='none';
+      } else alert('Error: '+res.message);
     });
   </script>
 </body>

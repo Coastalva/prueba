@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Registro de Horas COASTAL VA MARINE </title>
+  <title>Registro de Horas COASTAL VA MARINE</title>
   <style>
     body { font-family: 'Segoe UI', sans-serif; background: #f3f6f9; padding: 20px; max-width: 800px; margin: auto; }
     h1 { text-align: center; color: #01487d; }
@@ -55,98 +55,77 @@
     const scriptURL = 'https://script.google.com/macros/s/AKfycbwn0GkyY9daL2zRQgnxx5Fr9UnVfU7MfzbUKZuFlp5lQqhhrAutlGPG_MxizY6x7RwVNg/exec';
     const empleados = ['Cesar', 'Denis', 'Donald', 'Brayan', 'Angel', 'Jeferson', 'Lorenzo'];
 
-    // Inicializar lista de checkboxes para entrada y salida
+    // Funciones para evitar registros duplicados
+    const today = new Date().toISOString().split('T')[0];
+    function key(tipo, name) { return `${tipo}_${today}_${name}`; }
+    function hasRegistered(tipo, name) { return !!localStorage.getItem(key(tipo,name)); }
+    function setRegistered(tipo, name) { localStorage.setItem(key(tipo,name), true); }
+
+    // Inicializar listas
     const listaEnt = document.getElementById('listaEmpleadosEntrada');
     const listaSal = document.getElementById('listaEmpleadosSalida');
     empleados.forEach(name => {
-      const rowEnt = document.createElement('div');
-      rowEnt.innerHTML = `<label><input type="checkbox" class="ent" value="${name}" /> ${name}</label>`;
-      listaEnt.appendChild(rowEnt);
-      const rowSal = document.createElement('div');
-      rowSal.innerHTML = `<label><input type="checkbox" class="sal" value="${name}" /> ${name}</label>`;
-      listaSal.appendChild(rowSal);
+      listaEnt.innerHTML += `<label><input type="checkbox" class="ent" value="${name}" /> ${name}</label>`;
+      listaSal.innerHTML += `<label><input type="checkbox" class="sal" value="${name}" /> ${name}</label>`;
     });
-
-    // Dropdown para cambio de proyecto
     const selCambio = document.getElementById('empCambio');
-    empleados.forEach(name => {
-      const opt = document.createElement('option'); opt.value = name; opt.text = name;
-      selCambio.appendChild(opt);
-    });
+    empleados.forEach(name => selCambio.innerHTML += `<option value="${name}">${name}</option>`);
 
-    // Inicializar cámara
+    // Cámara y geolocalización
     const video = document.getElementById('video');
     const canvas = document.getElementById('fotoCanvas');
     const ctx = canvas.getContext('2d');
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => video.srcObject = stream)
-      .catch(()=>alert('No se pudo acceder a la cámara.'));
-
-    // Helpers
-    function capturePhoto() {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0);
-      return canvas.toDataURL('image/jpeg');
-    }
-    function getLocation() {
-      return new Promise((res, rej) => {
-        navigator.geolocation.getCurrentPosition(p => {
-          res(`${p.coords.latitude.toFixed(4)},${p.coords.longitude.toFixed(4)}`);
-        }, ()=> rej('GPS error'));
-      });
-    }
-    function sendRegistro(payload) {
-      return fetch(scriptURL, { method:'POST', body: new URLSearchParams(payload) })
-        .then(r=>r.json());
-    }
+    navigator.mediaDevices.getUserMedia({ video: true }).then(s=>video.srcObject=s).catch(()=>alert('No se pudo acceder a la cámara.'));
+    function capturePhoto() { canvas.width=video.videoWidth; canvas.height=video.videoHeight; ctx.drawImage(video,0,0); return canvas.toDataURL('image/jpeg'); }
+    function getLocation() { return new Promise((res,rej)=> navigator.geolocation.getCurrentPosition(p=>res(`${p.coords.latitude.toFixed(4)},${p.coords.longitude.toFixed(4)}`), ()=>rej('GPS error'))); }
+    function sendRegistro(payload) { return fetch(scriptURL,{method:'POST',body:new URLSearchParams(payload)}).then(r=>r.json()); }
 
     // 1) Entrada
-    document.getElementById('submitEntry').addEventListener('click', async () => {
-      const seleccionados = Array.from(document.querySelectorAll('.ent:checked')).map(cb=>cb.value);
-      if (!seleccionados.length) return alert('Selecciona al menos un empleado.');
-      document.getElementById('video').style.display = 'block';
-      const foto = capturePhoto();
-      document.getElementById('video').style.display = 'none';
-      let gps = '';
-      try { gps = await getLocation(); } catch{};
-
-      const payload = { TipoRegistro:'Entrada', Fecha: new Date().toISOString(), Empleados: seleccionados.join(', '), Ubicacion: gps, Foto: foto };
-      const res = await sendRegistro(payload);
-      if (res.status==='success') {
-        document.getElementById('resumen').innerHTML = `✅ Entrada registrada para ${seleccionados.join(', ')}.`;
+    document.getElementById('submitEntry').addEventListener('click', async ()=>{
+      const sel = Array.from(document.querySelectorAll('.ent:checked')).map(cb=>cb.value);
+      const pendings = sel.filter(n=>!hasRegistered('Entrada',n));
+      if (!pendings.length) return alert('Ya registraste la entrada para los seleccionados hoy.');
+      document.getElementById('video').style.display='block'; const foto=capturePhoto(); document.getElementById('video').style.display='none';
+      let gps=''; try{gps=await getLocation();}catch{}
+      const payload={TipoRegistro:'Entrada',Fecha:new Date().toISOString(),Empleados:pendings.join(', '),Ubicacion:gps,Foto:foto};
+      const res=await sendRegistro(payload);
+      if(res.status==='success'){
+        pendings.forEach(n=>setRegistered('Entrada',n));
+        document.getElementById('resumen').innerHTML=`✅ Entrada registrada para ${pendings.join(', ')}.`;
         document.getElementById('entrySection').style.display='none';
         document.getElementById('projectSection').style.display='block';
       } else alert('Error: '+res.message);
     });
 
     // 2) Cambio de proyecto
-    document.getElementById('submitCambio').addEventListener('click', async () => {
-      const emp = selCambio.value;
-      const proj = document.getElementById('nuevoProyecto').value.trim();
-      if (!emp || !proj) return alert('Selecciona empleado y escribe nuevo proyecto.');
-      const payload = { TipoRegistro:'CambioProyecto', Fecha: new Date().toISOString(), Empleado: emp, ProyectoNuevo: proj };
-      const res = await sendRegistro(payload);
-      if (res.status==='success') {
-        document.getElementById('resumen').innerHTML += `<br>✅ Cambio de proyecto de ${emp} a ${proj}.`;
+    document.getElementById('submitCambio').addEventListener('click', async ()=>{
+      const emp=selCambio.value;
+      if(!emp) return alert('Selecciona un empleado.');
+      if(hasRegistered('CambioProyecto',emp)) return alert('Ya registraste un cambio de proyecto para este empleado hoy.');
+      const proj=document.getElementById('nuevoProyecto').value.trim();
+      if(!proj) return alert('Escribe el nuevo proyecto.');
+      const payload={TipoRegistro:'CambioProyecto',Fecha:new Date().toISOString(),Empleado:emp,ProyectoNuevo:proj};
+      const res=await sendRegistro(payload);
+      if(res.status==='success'){
+        setRegistered('CambioProyecto',emp);
+        document.getElementById('resumen').innerHTML+=`<br>✅ Cambio de proyecto de ${emp} a ${proj}.`;
         document.getElementById('projectSection').style.display='none';
         document.getElementById('exitSection').style.display='block';
       } else alert('Error: '+res.message);
     });
 
     // 3) Salida
-    document.getElementById('submitExit').addEventListener('click', async () => {
-      const seleccionados = Array.from(document.querySelectorAll('.sal:checked')).map(cb=>cb.value);
-      if (!seleccionados.length) return alert('Selecciona al menos un empleado.');
-      document.getElementById('video').style.display = 'block';
-      const foto = capturePhoto();
-      document.getElementById('video').style.display = 'none';
-      let gps = '';
-      try { gps = await getLocation(); } catch{};
-      const payload = { TipoRegistro:'Salida', Fecha: new Date().toISOString(), Empleados: seleccionados.join(', '), Ubicacion: gps, Foto: foto };
-      const res = await sendRegistro(payload);
-      if (res.status==='success') {
-        document.getElementById('resumen').innerHTML += `<br>✅ Salida registrada para ${seleccionados.join(', ')}.`;
+    document.getElementById('submitExit').addEventListener('click', async ()=>{
+      const sel = Array.from(document.querySelectorAll('.sal:checked')).map(cb=>cb.value);
+      const pendings = sel.filter(n=>!hasRegistered('Salida',n));
+      if(!pendings.length) return alert('Ya registraste la salida para los seleccionados hoy.');
+      document.getElementById('video').style.display='block'; const foto=capturePhoto(); document.getElementById('video').style.display='none';
+      let gps=''; try{gps=await getLocation();}catch{}
+      const payload={TipoRegistro:'Salida',Fecha:new Date().toISOString(),Empleados:pendings.join(', '),Ubicacion:gps,Foto:foto};
+      const res=await sendRegistro(payload);
+      if(res.status==='success'){
+        pendings.forEach(n=>setRegistered('Salida',n));
+        document.getElementById('resumen').innerHTML+=`<br>✅ Salida registrada para ${pendings.join(', ')}.`;
         document.getElementById('exitSection').style.display='none';
       } else alert('Error: '+res.message);
     });

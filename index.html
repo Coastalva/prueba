@@ -68,7 +68,7 @@
       const tipo = document.getElementById('registroTipo').value;
 
       // Enviar datos a Google Apps Script
-      fetch('https://script.google.com/macros/s/AKfycbxy8Y0s41eU1d2oNUziRM5_T9-qrBtyuaS9ThEOwHLzbaLj_lG8D7A8TuL7rOe52c2zWw/exec', {
+      fetch('https://script.google.com/macros/s/AKfycbxTWTIzEhjZV4xxlO5Q-ahPLKfilGmZIs0mTgZZMcQbs4Q60n4anwMmGI2vzwGbsqPU4w/exec', {
         method: 'POST',
         body: JSON.stringify({ empleados: seleccionados, tipo, foto: fotoBase64 }),
         headers: { 'Content-Type': 'application/json' }

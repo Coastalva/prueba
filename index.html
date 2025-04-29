@@ -16,78 +16,134 @@
         h1 {
             text-align: center;
             color: #01487d;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         form {
             background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
         }
 
         .empleado-group {
-            margin-top: 15px;
+            margin-top: 20px;
             font-weight: 600;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
         }
 
         .empleado-option {
             display: flex;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .empleado-option input[type="checkbox"] {
-            margin-right: 8px;
+            margin-right: 10px;
+            transform: scale(1.1);
         }
 
         label {
             display: block;
-            margin-top: 15px;
+            margin-top: 20px;
             font-weight: 600;
+            color: #333;
         }
 
         select, button {
+            width: calc(100% - 22px);
+            padding: 12px;
+            margin-top: 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        select:focus, button:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+        #video-container {
+            position: relative;
             width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            border-radius: 5px;
+            max-height: 240px;
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
             border: 1px solid #ccc;
         }
 
         video {
+            display: block;
             width: 100%;
-            max-height: 180px;
-            margin-top: 15px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
+            height: auto;
         }
 
         #captureBtn {
-            background-color: #4CAF50;
+            background-color: #007bff;
             color: white;
-            padding: 10px 15px;
+            padding: 12px 20px;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
-            margin-top: 10px;
+            margin-top: 15px;
             font-weight: bold;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            width: calc(100% - 22px);
+            box-sizing: border-box;
         }
 
         #captureBtn:hover {
-            background-color: #45a049;
+            background-color: #0056b3;
         }
 
         #resumen {
-            margin-top: 20px;
-            padding: 15px;
+            margin-top: 25px;
+            padding: 18px;
             background-color: #e6f4f1;
-            border-left: 5px solid #34a853;
-            border-radius: 6px;
+            border-left: 6px solid #34a853;
+            border-radius: 8px;
+            font-size: 16px;
+            line-height: 1.6;
         }
 
         #fotoCanvas {
-            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); /* Fondo oscuro semitransparente */
+            display: none; /* Inicialmente oculto */
+            align-items: center;
+            justify-content: center;
+            z-index: 10; /* Asegura que esté encima del video */
+        }
+
+        #fotoCanvas img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .overlay-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            display: none; /* Inicialmente oculto */
         }
     </style>
 </head>
@@ -106,6 +162,10 @@
                 <input type="checkbox" id="janet" name="empleado" value="Janet">
                 <label for="janet">Janet</label>
             </div>
+                <div class="empleado-option">
+                <input type="checkbox" id="Denis Jobiel" name="empleado" value="Denis Jobiel">
+                <label for="Denis">Denis</label>
+            </div>
             <div class="empleado-option">
                 <input type="checkbox" id="victor" name="empleado" value="Victor">
                 <label for="victor">Victor</label>
@@ -120,9 +180,12 @@
         </select>
 
         <label for="video">Vista de la cámara:</label>
-        <video id="video" autoplay></video>
+        <div id="video-container">
+            <video id="video" autoplay></video>
+            <div class="overlay-message" id="captureMessage">Foto Capturada</div>
+        </div>
         <button type="button" id="captureBtn">Capturar Foto</button>
-        <canvas id="fotoCanvas"></canvas>
+        <div id="fotoCanvas"></div>
         <input type="hidden" id="fotoBase64">
 
         <button type="submit">Registrar</button>
@@ -132,9 +195,10 @@
 
     <script>
         const video = document.getElementById('video');
-        const canvas = document.getElementById('fotoCanvas');
-        const context = canvas.getContext('2d');
+        const canvasContainer = document.getElementById('fotoCanvas');
+        const context = document.createElement('canvas').getContext('2d');
         const captureBtn = document.getElementById('captureBtn');
+        const captureMessage = document.getElementById('captureMessage');
         const scriptURL = 'https://script.google.com/macros/s/AKfycbyn--DNaur-r1Nld13BpQYicMetgEFXm5kJ2EvP7T-HHO0ky8lmbOrK7NobJvB6g3DItQ/exec'; // 🔁 Reemplaza con tu URL de Google Apps Script
         let fotoTomada = false;
 
@@ -144,12 +208,27 @@
             .catch(() => alert("No se pudo acceder a la cámara trasera."));
 
         captureBtn.addEventListener('click', function() {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            document.getElementById('fotoBase64').value = canvas.toDataURL("image/jpeg");
+            const width = video.videoWidth;
+            const height = video.videoHeight;
+            context.canvas.width = width;
+            context.canvas.height = height;
+            context.drawImage(video, 0, 0, width, height);
+            const imageDataURL = context.canvas.toDataURL("image/jpeg");
+            document.getElementById('fotoBase64').value = imageDataURL;
             fotoTomada = true;
-            alert("Foto capturada. Ahora puedes registrar.");
+
+            // Mostrar la captura en pantalla
+            canvasContainer.innerHTML = `<img src="${imageDataURL}" alt="Foto Capturada">`;
+            canvasContainer.style.display = 'flex';
+
+            // Ocultar la captura después de un breve periodo
+            setTimeout(() => {
+                canvasContainer.style.display = 'none';
+                captureMessage.style.display = 'block';
+                setTimeout(() => {
+                    captureMessage.style.display = 'none';
+                }, 1500); // Ocultar el mensaje después de 1.5 segundos
+            }, 2000); // Mostrar la captura durante 2 segundos
         });
 
         document.getElementById('registroForm').addEventListener('submit', function (e) {
@@ -216,6 +295,7 @@
                 fotoTomada = false;
                 document.getElementById('fotoBase64').value = ""; // Clear the base64 data
                 document.getElementById('resumen').innerHTML = ""; // Clear previous resumen
+                canvasContainer.innerHTML = ""; // Clear the displayed image
 
                 // Fetch and display the day's resumen
                 fetch(scriptURL + "?resumen_hoy=true&fecha=" + fecha) // Example: Adjust your Apps Script to handle this

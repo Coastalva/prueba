@@ -150,6 +150,9 @@
             margin-top: 20px;
             border-top: 1px solid #eee;
             padding-top: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
 
         #agregarEmpleadoBtn {
@@ -160,7 +163,6 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
-            margin-top: 10px;
         }
 
         #agregarEmpleadoBtn:hover {
@@ -168,7 +170,22 @@
         }
 
         #nuevoEmpleadoInput {
-            display: none;
+            flex-grow: 1;
+        }
+
+        #confirmarNuevoEmpleadoBtn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: none; /* Inicialmente oculto */
+        }
+
+        #confirmarNuevoEmpleadoBtn:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
@@ -177,7 +194,8 @@
     <h1>Coastal VA Marine Construction Hours</h1>
 
     <form id="registroForm">
-                   <div class="empleado-option">
+      
+            <div class="empleado-option">
                 <input type="checkbox" id="jefferson" name="empleado" value="Jefferson Espinoza">
                 <label for="jefferson">Jefferson Espinoza</label>
             </div>
@@ -208,8 +226,8 @@
         </div>
 
         <div id="nuevoEmpleadoContainer">
-            <button type="button" id="agregarEmpleadoBtn">Agregar Nuevo Empleado</button>
             <input type="text" id="nuevoEmpleadoInput" placeholder="Nombre del nuevo empleado">
+            <button type="button" id="confirmarNuevoEmpleadoBtn">Agregar</button>
         </div>
 
         <label for="tipo">Tipo de jornada:</label>
@@ -239,8 +257,8 @@
         const context = document.createElement('canvas').getContext('2d');
         const captureBtn = document.getElementById('captureBtn');
         const captureMessage = document.getElementById('captureMessage');
-        const agregarEmpleadoBtn = document.getElementById('agregarEmpleadoBtn');
         const nuevoEmpleadoInput = document.getElementById('nuevoEmpleadoInput');
+        const confirmarNuevoEmpleadoBtn = document.getElementById('confirmarNuevoEmpleadoBtn');
         const empleadoGroup = document.querySelector('.empleado-group');
         const scriptURL = 'https://script.google.com/macros/s/AKfycbyn--DNaur-r1Nld13BpQYicMetgEFXm5kJ2EvP7T-HHO0ky8lmbOrK7NobJvB6g3DItQ/exec'; // 🔁 Reemplaza con tu URL de Google Apps Script
         let fotoTomada = false;
@@ -274,15 +292,13 @@
             }, 2000); // Mostrar la captura durante 2 segundos
         });
 
-        agregarEmpleadoBtn.addEventListener('click', function() {
-            nuevoEmpleadoInput.style.display = 'block';
-            agregarEmpleadoBtn.style.display = 'none';
-            nuevoEmpleadoInput.focus();
-        });
+        // Mostrar el input y el botón "Agregar"
+        nuevoEmpleadoInput.style.display = 'block';
+        confirmarNuevoEmpleadoBtn.style.display = 'block';
 
-        nuevoEmpleadoInput.addEventListener('keypress', function(event) {
-            if (event.key === 'Enter' && nuevoEmpleadoInput.value.trim() !== '') {
-                const nuevoNombre = nuevoEmpleadoInput.value.trim();
+        confirmarNuevoEmpleadoBtn.addEventListener('click', function() {
+            const nuevoNombre = nuevoEmpleadoInput.value.trim();
+            if (nuevoNombre !== '') {
                 const nuevoId = nuevoNombre.toLowerCase().replace(/\s+/g, ''); // Crear un ID único y seguro
                 const nuevoCheckbox = document.createElement('div');
                 nuevoCheckbox.classList.add('empleado-option');
@@ -292,15 +308,6 @@
                 `;
                 empleadoGroup.appendChild(nuevoCheckbox);
                 nuevoEmpleadoInput.value = '';
-                nuevoEmpleadoInput.style.display = 'none';
-                agregarEmpleadoBtn.style.display = 'block';
-            }
-        });
-
-        nuevoEmpleadoInput.addEventListener('blur', function() {
-            if (nuevoEmpleadoInput.value.trim() === '') {
-                nuevoEmpleadoInput.style.display = 'none';
-                agregarEmpleadoBtn.style.display = 'block';
             }
         });
 

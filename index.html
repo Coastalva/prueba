@@ -1,53 +1,59 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Registro de Jornada</title>
+  <title>Coastal VA Marine Construction Hours</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #eef2f7;
-      padding: 2rem;
-      display: flex;
-      justify-content: center;
+      background-color: #f3f6f9;
+      padding: 30px;
+      max-width: 600px;
+      margin: auto;
     }
 
-    .form-container {
-      background: white;
-      padding: 2rem;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      max-width: 500px;
-      width: 100%;
-    }
-
-    h2 {
+    h1 {
       text-align: center;
       color: #01487d;
+      margin-bottom: 10px;
     }
 
-    .empleados label {
+    form {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    label {
       display: block;
-      margin-bottom: 8px;
+      margin-top: 15px;
+      font-weight: 600;
     }
 
     select, button {
       width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      border-radius: 6px;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 5px;
       border: 1px solid #ccc;
     }
 
     video {
       width: 100%;
-      margin-top: 10px;
+      max-height: 180px;
+      margin-top: 15px;
       border-radius: 6px;
+      border: 1px solid #ccc;
     }
 
-    canvas {
-      display: none;
+    #resumen {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #e6f4f1;
+      border-left: 5px solid #34a853;
+      border-radius: 6px;
     }
 
     button {
@@ -57,115 +63,108 @@
       cursor: pointer;
     }
 
-    .success, .summary {
-      margin-top: 1rem;
-      text-align: center;
-    }
-
-    .success {
-      color: green;
+    button:hover {
+      background-color: #0056b3;
     }
   </style>
 </head>
 <body>
 
-<div class="form-container">
-  <h2>Registro de Jornada</h2>
-  <form id="registroForm">
-    <div class="empleados">
-      <label><input type="checkbox" name="Nombre" value="Carlos"> Carlos</label>
-      <label><input type="checkbox" name="Nombre" value="Lucía"> Lucía</label>
-      <label><input type="checkbox" name="Nombre" value="María"> María</label>
-      <label><input type="checkbox" name="Nombre" value="Pedro"> Pedro</label>
-    </div>
+  <h1>Coastal VA Marine Construction Hours</h1>
 
-    <select name="TipoJornada" required>
-      <option value="" disabled selected>Tipo de jornada</option>
+  <form id="registroForm">
+    <label for="nombre">Empleado:</label>
+    <select id="nombre" required>
+      <option value="">Selecciona tu nombre</option>
+      <option value="Carlos">Carlos</option>
+      <option value="Janet">Janet</option>
+      <option value="Victor">Victor</option>
+    </select>
+
+    <label for="tipo">Tipo de jornada:</label>
+    <select id="tipo" required>
+      <option value="">Selecciona una opción</option>
       <option value="Entrada">Entrada</option>
+      <option value="Almuerzo">Almuerzo</option>
+      <option value="Regreso">Regreso</option>
       <option value="Salida">Salida</option>
     </select>
 
-    <video id="video" autoplay playsinline></video>
-    <canvas id="canvas"></canvas>
-
-    <input type="hidden" name="Fecha" id="fecha">
-    <input type="hidden" name="Hora" id="hora">
-    <input type="hidden" name="Foto" id="fotoBase64">
+    <label for="video">Foto (se toma automáticamente):</label>
+    <video id="video" autoplay></video>
+    <canvas id="fotoCanvas" style="display:none;"></canvas>
+    <input type="hidden" id="fotoBase64">
 
     <button type="submit">Registrar</button>
   </form>
 
-  <div id="mensaje" class="success"></div>
-</div>
+  <div id="resumen"></div>
 
-<script>
-  const video = document.getElementById('video');
-  const canvas = document.getElementById('canvas');
-  const context = canvas.getContext('2d');
-  const fotoBase64 = document.getElementById('fotoBase64');
-  const fechaInput = document.getElementById('fecha');
-  const horaInput = document.getElementById('hora');
-  const mensaje = document.getElementById('mensaje');
-  const scriptURL = 'https://script.google.com/macros/s/AKfycbyn--DNaur-r1Nld13BpQYicMetgEFXm5kJ2EvP7T-HHO0ky8lmbOrK7NobJvB6g3DItQ/exec'; // Reemplazar con tu Apps Script
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('fotoCanvas');
+    const context = canvas.getContext('2d');
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyn--DNaur-r1Nld13BpQYicMetgEFXm5kJ2EvP7T-HHO0ky8lmbOrK7NobJvB6g3DItQ/exec'; // 🔁 Reemplaza con tu URL de Google Apps Script
 
-  // Activar cámara trasera
-  navigator.mediaDevices.getUserMedia({
-    video: { facingMode: { exact: "environment" } }
-  }).then(stream => {
-    video.srcObject = stream;
-  }).catch(error => {
-    alert("No se pudo acceder a la cámara trasera. Usa un dispositivo móvil.");
-  });
+    // Activar cámara
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => video.srcObject = stream)
+      .catch(() => alert("No se pudo acceder a la cámara."));
 
-  function capturarFoto() {
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    fotoBase64.value = canvas.toDataURL("image/jpeg");
-  }
+    document.getElementById('registroForm').addEventListener('submit', function (e) {
+      e.preventDefault();
 
-  function getFechaHora() {
-    const ahora = new Date();
-    return {
-      fecha: ahora.toISOString().split("T")[0],
-      hora: ahora.toTimeString().split(" ")[0].slice(0, 5)
-    };
-  }
+      const nombre = document.getElementById('nombre').value;
+      const tipo = document.getElementById('tipo').value;
+      const fecha = new Date().toISOString().split('T')[0];
+      const hora = new Date().toLocaleTimeString('es-ES', { hour12: false }); // 24h
+      const clave = `${nombre}_${fecha}_${tipo}`;
 
-  document.getElementById('registroForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    capturarFoto();
-    const { fecha, hora } = getFechaHora();
-    fechaInput.value = fecha;
-    horaInput.value = hora;
-
-    const empleados = [...document.querySelectorAll('input[name="Nombre"]:checked')];
-    if (empleados.length === 0) {
-      alert("Selecciona al menos un empleado.");
-      return;
-    }
-
-    mensaje.textContent = '';
-
-    for (const empleado of empleados) {
-      const datos = new FormData();
-      datos.append("Nombre", empleado.value);
-      datos.append("TipoJornada", document.querySelector('[name="TipoJornada"]').value);
-      datos.append("Fecha", fecha);
-      datos.append("Hora", hora);
-      datos.append("Foto", fotoBase64.value);
-
-      try {
-        const res = await fetch(scriptURL, { method: 'POST', body: datos });
-        const result = await res.json();
-        mensaje.textContent += ✔️ ${empleado.value}: ${result.message}\n;
-      } catch (err) {
-        mensaje.textContent += ❌ ${empleado.value}: error al registrar\n;
+      if (localStorage.getItem(clave)) {
+        alert(`Ya registraste tu ${tipo.toLowerCase()} hoy.`);
+        return;
       }
-    }
 
-    document.getElementById('registroForm').reset();
-  });
-</script>
+      // Capturar foto
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const fotoBase64 = canvas.toDataURL("image/jpeg");
+
+      // Capturar ubicación
+      navigator.geolocation.getCurrentPosition(pos => {
+        const gps = `${pos.coords.latitude.toFixed(4)},${pos.coords.longitude.toFixed(4)}`;
+
+        const datos = new URLSearchParams({
+          Nombre: nombre,
+          TipoJornada: tipo,
+          Fecha: fecha,
+          Hora: hora,
+          GPS: gps,
+          Foto: fotoBase64
+        });
+
+        fetch(scriptURL, { method: 'POST', body: datos })
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === 'success') {
+              localStorage.setItem(clave, hora);
+              document.getElementById('resumen').innerHTML = `
+                ✅ <strong>Registro exitoso</strong><br>
+                <b>Empleado:</b> ${nombre}<br>
+                <b>Jornada:</b> ${tipo}<br>
+                <b>Hora:</b> ${hora}<br>
+                <b>Ubicación:</b> ${gps}<br><br>
+                <b>Resumen del día:</b><br>${data.resumen}
+              `;
+              document.getElementById('registroForm').reset();
+            } else {
+              alert("Error: " + data.message);
+            }
+          });
+      }, () => alert("No se pudo obtener la ubicación."));
+    });
+  </script>
+
 </body>
 </html>

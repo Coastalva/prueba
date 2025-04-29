@@ -351,33 +351,29 @@
                         Foto: fotoBase64
                     });
 
-                    let horasTrabajadas = '';
+                      let horasTrabajadas = '';
                     if (tipo === 'Salida' && horaEntrada[nombre]) {
                         const entradaTime = horaEntrada[nombre];
                         const diferenciaMs = horaActual.getTime() - entradaTime.getTime();
                         const diferenciaHoras = Math.floor(diferenciaMs / (1000 * 60 * 60));
                         const diferenciaMinutos = Math.floor((diferenciaMs % (1000 * 60 * 60)) / (1000 * 60));
-                        horasTrabajadas = ` (Trabajó: ${diferenciaHoras} horas y ${diferenciaMinutos} minutos)`;
+                        const horasStr = (diferenciaHoras < 10 ? '0' : '') + diferenciaHoras;
+                        const minutosStr = (diferenciaMinutos < 10 ? '0' : '') + diferenciaMinutos;
+                        horasTrabajadas = `${horasStr}:${minutosStr}`;
                         delete horaEntrada[nombre]; // Limpiar la hora de entrada al registrar la salida
                     } else if (tipo === 'Entrada') {
                         horaEntrada[nombre] = new Date(); // Registrar la hora de entrada
                     }
 
-                    fetch(scriptURL, { method: 'POST', body: datos })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.status === 'success') {
-                                localStorage.setItem(clave, horaString);
-                                document.getElementById('resumen').innerHTML += `
-                                    ✅ <strong>Registro exitoso para ${nombre}</strong><br>
-                                    <b>Jornada:</b> ${tipo}<br>
-                                    <b>Hora:</b> ${horaString}${horasTrabajadas}<br>
-                                    <b>Ubicación:</b> ${gps}<br><br>
-                                `;
-                            } else {
-                                alert(`Error al registrar a ${nombre}: ` + data.message);
-                            }
-                        });
+                    const datos = new URLSearchParams({
+                        Nombre: nombre,
+                        TipoJornada: tipo,
+                        Fecha: fecha,
+                        Hora: horaString,
+                        GPS: gps,
+                        Foto: fotoBase64,
+                        HorasTrabajadas: horasTrabajadas // Enviando las horas trabajadas
+                    });
                 });
 
                 // Clear the form and reset the fotoTomada flag

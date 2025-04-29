@@ -97,6 +97,7 @@
 
   <div id="mensaje" class="success"></div>
 </div>
+
 <script>
   const video = document.getElementById('video');
   const canvas = document.getElementById('canvas');
@@ -105,9 +106,7 @@
   const fechaInput = document.getElementById('fecha');
   const horaInput = document.getElementById('hora');
   const mensaje = document.getElementById('mensaje');
-  const descripcion = document.getElementById('descripcion');
-  const tipoJornadaSelect = document.querySelector('[name="TipoJornada"]');
-  const scriptURL = 'https://script.google.com/macros/s/AKfycbzkhBoFrq0xJViFTTUqIFxOhvG885vb7y27GdE3krnPcmQyrdX-oQ98xAUjDHMcuE0DSA/exec'; // Reemplazar con tu URL real
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbzkhBoFrq0xJViFTTUqIFxOhvG885vb7y27GdE3krnPcmQyrdX-oQ98xAUjDHMcuE0DSA/exec'; // Reemplazar con tu Apps Script
 
   // Activar cámara trasera
   navigator.mediaDevices.getUserMedia({
@@ -116,12 +115,6 @@
     video.srcObject = stream;
   }).catch(error => {
     alert("No se pudo acceder a la cámara trasera. Usa un dispositivo móvil.");
-  });
-
-  // Mostrar/ocultar descripción si el tipo es "Salida"
-  tipoJornadaSelect.addEventListener('change', () => {
-    descripcion.style.display = tipoJornadaSelect.value === "Salida" ? "block" : "none";
-    descripcion.required = tipoJornadaSelect.value === "Salida";
   });
 
   function capturarFoto() {
@@ -147,16 +140,8 @@
     horaInput.value = hora;
 
     const empleados = [...document.querySelectorAll('input[name="Nombre"]:checked')];
-    const tipoJornada = tipoJornadaSelect.value;
-    const descTrabajo = descripcion.value.trim();
-
     if (empleados.length === 0) {
       alert("Selecciona al menos un empleado.");
-      return;
-    }
-
-    if (tipoJornada === "Salida" && descTrabajo === "") {
-      alert("Por favor, describe el trabajo realizado.");
       return;
     }
 
@@ -165,26 +150,22 @@
     for (const empleado of empleados) {
       const datos = new FormData();
       datos.append("Nombre", empleado.value);
-      datos.append("TipoJornada", tipoJornada);
+      datos.append("TipoJornada", document.querySelector('[name="TipoJornada"]').value);
       datos.append("Fecha", fecha);
       datos.append("Hora", hora);
       datos.append("Foto", fotoBase64.value);
-      datos.append("Descripcion", descTrabajo);
 
       try {
         const res = await fetch(scriptURL, { method: 'POST', body: datos });
         const result = await res.json();
-        mensaje.textContent += `✔️ ${empleado.value}: ${result.message}\n`;
+        mensaje.textContent += ✔️ ${empleado.value}: ${result.message}\n;
       } catch (err) {
-        mensaje.textContent += `❌ ${empleado.value}: error al registrar\n`;
+        mensaje.textContent += ❌ ${empleado.value}: error al registrar\n;
       }
     }
 
     document.getElementById('registroForm').reset();
-    descripcion.style.display = "none";
   });
 </script>
-
-
 </body>
 </html>

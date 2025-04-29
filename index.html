@@ -181,7 +181,6 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
-            display: none; /* Inicialmente oculto */
         }
 
         #confirmarNuevoEmpleadoBtn:hover {
@@ -194,8 +193,9 @@
     <h1>Coastal VA Marine Construction Hours</h1>
 
     <form id="registroForm">
-      
-            <div class="empleado-option">
+        <div class="empleado-group">
+            Empleado(s):
+                      <div class="empleado-option">
                 <input type="checkbox" id="jefferson" name="empleado" value="Jefferson Espinoza">
                 <label for="jefferson">Jefferson Espinoza</label>
             </div>
@@ -292,22 +292,18 @@
             }, 2000); // Mostrar la captura durante 2 segundos
         });
 
-        // Mostrar el input y el botón "Agregar"
-        nuevoEmpleadoInput.style.display = 'block';
-        confirmarNuevoEmpleadoBtn.style.display = 'block';
-
         confirmarNuevoEmpleadoBtn.addEventListener('click', function() {
             const nuevoNombre = nuevoEmpleadoInput.value.trim();
             if (nuevoNombre !== '') {
                 const nuevoId = nuevoNombre.toLowerCase().replace(/\s+/g, ''); // Crear un ID único y seguro
-                const nuevoCheckbox = document.createElement('div');
-                nuevoCheckbox.classList.add('empleado-option');
-                nuevoCheckbox.innerHTML = `
+                const nuevoCheckboxDiv = document.createElement('div');
+                nuevoCheckboxDiv.classList.add('empleado-option');
+                nuevoCheckboxDiv.innerHTML = `
                     <input type="checkbox" id="${nuevoId}" name="empleado" value="${nuevoNombre}">
                     <label for="${nuevoId}">${nuevoNombre}</label>
                 `;
-                empleadoGroup.appendChild(nuevoCheckbox);
-                nuevoEmpleadoInput.value = '';
+                empleadoGroup.appendChild(nuevoCheckboxDiv);
+                nuevoEmpleadoInput.value = ''; // Limpiar el campo de texto
             }
         });
 

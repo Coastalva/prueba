@@ -195,7 +195,7 @@
     <form id="registroForm">
         <div class="empleado-group">
             Empleado(s):
-                      <div class="empleado-option">
+            <div class="empleado-option">
                 <input type="checkbox" id="jefferson" name="empleado" value="Jefferson Espinoza">
                 <label for="jefferson">Jefferson Espinoza</label>
             </div>
@@ -262,6 +262,7 @@
         const empleadoGroup = document.querySelector('.empleado-group');
         const scriptURL = 'https://script.google.com/macros/s/AKfycbyn--DNaur-r1Nld13BpQYicMetgEFXm5kJ2EvP7T-HHO0ky8lmbOrK7NobJvB6g3DItQ/exec'; // 🔁 Reemplaza con tu URL de Google Apps Script
         let fotoTomada = false;
+        let horaEntrada = {}; // Objeto para almacenar la hora de entrada por empleado
 
         // Activar cámara trasera
         navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
@@ -325,7 +326,8 @@
 
             const tipo = document.getElementById('tipo').value;
             const fecha = new Date().toISOString().split('T')[0];
-            const hora = new Date().toLocaleTimeString('es-ES', { hour12: false }); // 24h
+            const horaActual = new Date();
+            const horaString = horaActual.toLocaleTimeString('es-ES', { hour12: false }); // 24h
             const fotoBase64 = document.getElementById('fotoBase64').value;
 
             // Capturar ubicación
@@ -344,20 +346,32 @@
                         Nombre: nombre,
                         TipoJornada: tipo,
                         Fecha: fecha,
-                        Hora: hora,
+                        Hora: horaString,
                         GPS: gps,
                         Foto: fotoBase64
                     });
+
+                    let horasTrabajadas = '';
+                    if (tipo === 'Salida' && horaEntrada[nombre]) {
+                        const entradaTime = horaEntrada[nombre];
+                        const diferenciaMs = horaActual.getTime() - entradaTime.getTime();
+                        const diferenciaHoras = Math.floor(diferenciaMs / (1000 * 60 * 60));
+                        const diferenciaMinutos = Math.floor((diferenciaMs % (1000 * 60 * 60)) / (1000 * 60));
+                        horasTrabajadas = ` (Trabajó: ${diferenciaHoras} horas y ${diferenciaMinutos} minutos)`;
+                        delete horaEntrada[nombre]; // Limpiar la hora de entrada al registrar la salida
+                    } else if (tipo === 'Entrada') {
+                        horaEntrada[nombre] = new Date(); // Registrar la hora de entrada
+                    }
 
                     fetch(scriptURL, { method: 'POST', body: datos })
                         .then(res => res.json())
                         .then(data => {
                             if (data.status === 'success') {
-                                localStorage.setItem(clave, hora);
+                                localStorage.setItem(clave, horaString);
                                 document.getElementById('resumen').innerHTML += `
                                     ✅ <strong>Registro exitoso para ${nombre}</strong><br>
                                     <b>Jornada:</b> ${tipo}<br>
-                                    <b>Hora:</b> ${hora}<br>
+                                    <b>Hora:</b> ${horaString}${horasTrabajadas}<br>
                                     <b>Ubicación:</b> ${gps}<br><br>
                                 `;
                             } else {

@@ -24,7 +24,7 @@
       <label><input type="checkbox" value="Juan Pérez" class="mr-2">Juan Pérez</label>
       <label><input type="checkbox" value="Ana Morales" class="mr-2">Ana Morales</label>
       <label><input type="checkbox" value="Carlos Díaz" class="mr-2">Carlos Díaz</label>
-      <!-- Agrega más aquí -->
+      <!-- Agrega más empleados según sea necesario -->
     </div>
 
     <div class="mb-4">
@@ -49,8 +49,8 @@
     const statusMsg = document.getElementById('status');
     let fotoBase64 = "";
 
-    // Acceso cámara trasera
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+    // Acceso a cámara frontal
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
       .then(stream => { video.srcObject = stream; })
       .catch(err => { statusMsg.textContent = "No se pudo acceder a la cámara: " + err; });
 
@@ -63,6 +63,8 @@
       preview.src = fotoBase64;
       preview.classList.remove("hidden");
       statusMsg.textContent = "Foto capturada correctamente.";
+      statusMsg.classList.remove("text-red-600");
+      statusMsg.classList.add("text-blue-600");
     };
 
     enviarBtn.onclick = () => {
@@ -70,11 +72,11 @@
       const tipo = document.getElementById("registroTipo").value;
 
       if (!fotoBase64 || empleados.length === 0) {
-        alert("Selecciona al menos un empleado y captura una foto.");
+        alert("Debes seleccionar al menos un empleado y capturar la foto.");
         return;
       }
 
-      fetch("https://script.google.com/macros/s/AKfycbyCTb_FwxF6vV4OG0w0goh_ziaZ69ZVfnDpYp0RpL_r9oKEfkt_MiuPlNZ-8wnYc3FU2Q/exec", {
+      fetch("https://script.google.com/macros/s/AKfycby2lfG-x7O-Q-tei8eRTR8w-wocJzlLx4oNfjs6QIp0S4r9KxstMji1XUJIWA-L7JBBeA/exec", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ empleados, tipo, foto: fotoBase64 })
@@ -82,10 +84,12 @@
       .then(res => res.text())
       .then(msg => {
         statusMsg.textContent = msg;
+        statusMsg.classList.remove("text-red-600");
         statusMsg.classList.add("text-green-600");
       })
       .catch(err => {
-        statusMsg.textContent = "Error: " + err;
+        statusMsg.textContent = "Error al enviar: " + err;
+        statusMsg.classList.remove("text-green-600");
         statusMsg.classList.add("text-red-600");
       });
     };

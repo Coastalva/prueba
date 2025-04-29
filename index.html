@@ -260,7 +260,7 @@
         const nuevoEmpleadoInput = document.getElementById('nuevoEmpleadoInput');
         const confirmarNuevoEmpleadoBtn = document.getElementById('confirmarNuevoEmpleadoBtn');
         const empleadoGroup = document.querySelector('.empleado-group');
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbxVBYtB5Z0J2K1MOFqXExc1XFg82GJq-ZUL-kiudrLXkp2h4kQNI1hs6MsZsDH7TGcosg/exec'; // 🔁 Reemplaza con tu URL de Google Apps Script
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbyn--DNaur-r1Nld13BpQYicMetgEFXm5kJ2EvP7T-HHO0ky8lmbOrK7NobJvB6g3DItQ/exec'; // 🔁 Reemplaza con tu URL de Google Apps Script
         let fotoTomada = false;
         let horaEntrada = {}; // Objeto para almacenar la hora de entrada por empleado
 
@@ -351,29 +351,33 @@
                         Foto: fotoBase64
                     });
 
-                      let horasTrabajadas = '';
+                    let horasTrabajadas = '';
                     if (tipo === 'Salida' && horaEntrada[nombre]) {
                         const entradaTime = horaEntrada[nombre];
                         const diferenciaMs = horaActual.getTime() - entradaTime.getTime();
                         const diferenciaHoras = Math.floor(diferenciaMs / (1000 * 60 * 60));
                         const diferenciaMinutos = Math.floor((diferenciaMs % (1000 * 60 * 60)) / (1000 * 60));
-                        const horasStr = (diferenciaHoras < 10 ? '0' : '') + diferenciaHoras;
-                        const minutosStr = (diferenciaMinutos < 10 ? '0' : '') + diferenciaMinutos;
-                        horasTrabajadas = `${horasStr}:${minutosStr}`;
+                        horasTrabajadas = ` (Trabajó: ${diferenciaHoras} horas y ${diferenciaMinutos} minutos)`;
                         delete horaEntrada[nombre]; // Limpiar la hora de entrada al registrar la salida
                     } else if (tipo === 'Entrada') {
                         horaEntrada[nombre] = new Date(); // Registrar la hora de entrada
                     }
 
-                    const datos = new URLSearchParams({
-                        Nombre: nombre,
-                        TipoJornada: tipo,
-                        Fecha: fecha,
-                        Hora: horaString,
-                        GPS: gps,
-                        Foto: fotoBase64,
-                        HorasTrabajadas: horasTrabajadas // Enviando las horas trabajadas
-                    });
+                    fetch(scriptURL, { method: 'POST', body: datos })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                localStorage.setItem(clave, horaString);
+                                document.getElementById('resumen').innerHTML += `
+                                    ✅ <strong>Registro exitoso para ${nombre}</strong><br>
+                                    <b>Jornada:</b> ${tipo}<br>
+                                    <b>Hora:</b> ${horaString}${horasTrabajadas}<br>
+                                    <b>Ubicación:</b> ${gps}<br><br>
+                                `;
+                            } else {
+                                alert(`Error al registrar a ${nombre}: ` + data.message);
+                            }
+                        });
                 });
 
                 // Clear the form and reset the fotoTomada flag

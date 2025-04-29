@@ -1,170 +1,213 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Coastal VA Marine Construction Hours</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f3f6f9;
-      padding: 30px;
-      max-width: 600px;
-      margin: auto;
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Coastal VA Marine Construction Hours</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f3f6f9;
+            padding: 30px;
+            max-width: 600px;
+            margin: auto;
+        }
 
-    h1 {
-      text-align: center;
-      color: #01487d;
-      margin-bottom: 10px;
-    }
+        h1 {
+            text-align: center;
+            color: #01487d;
+            margin-bottom: 20px;
+        }
 
-    form {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-    }
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
 
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: 600;
-    }
+        .empleado-group {
+            margin-top: 15px;
+            font-weight: 600;
+        }
 
-    select, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
+        .empleado-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
 
-    video {
-      width: 100%;
-      max-height: 180px;
-      margin-top: 15px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
+        .empleado-option input[type="checkbox"] {
+            margin-right: 8px;
+        }
 
-    #resumen {
-      margin-top: 20px;
-      padding: 15px;
-      background-color: #e6f4f1;
-      border-left: 5px solid #34a853;
-      border-radius: 6px;
-    }
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: 600;
+        }
 
-    button {
-      background-color: #007bff;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-    }
+        select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
 
-    button:hover {
-      background-color: #0056b3;
-    }
-  </style>
+        video {
+            width: 100%;
+            max-height: 180px;
+            margin-top: 15px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        #resumen {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e6f4f1;
+            border-left: 5px solid #34a853;
+            border-radius: 6px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
 
-  <h1>Coastal VA Marine Construction Hours</h1>
+    <h1>Coastal VA Marine Construction Hours</h1>
 
-  <form id="registroForm">
-    <label for="nombre">Empleado:</label>
-    <select id="nombre" required>
-      <option value="">Selecciona tu nombre</option>
-      <option value="Carlos">Carlos</option>
-      <option value="Janet">Janet</option>
-      <option value="Victor">Victor</option>
-    </select>
+    <form id="registroForm">
+        <div class="empleado-group">
+            Empleado(s):
+            <div class="empleado-option">
+                <input type="checkbox" id="carlos" name="empleado" value="Carlos">
+                <label for="carlos">Carlos</label>
+            </div>
+            <div class="empleado-option">
+                <input type="checkbox" id="janet" name="empleado" value="Janet">
+                <label for="janet">Janet</label>
+            </div>
+            <div class="empleado-option">
+                <input type="checkbox" id="victor" name="empleado" value="Victor">
+                <label for="victor">Victor</label>
+            </div>
+        </div>
 
-    <label for="tipo">Tipo de jornada:</label>
-    <select id="tipo" required>
-      <option value="">Selecciona una opción</option>
-      <option value="Entrada">Entrada</option>
-      <option value="Almuerzo">Almuerzo</option>
-      <option value="Regreso">Regreso</option>
-      <option value="Salida">Salida</option>
-    </select>
+        <label for="tipo">Tipo de jornada:</label>
+        <select id="tipo" required>
+            <option value="">Selecciona una opción</option>
+            <option value="Entrada">Entrada</option>
+            <option value="Salida">Salida</option>
+        </select>
 
-    <label for="video">Foto (se toma automáticamente):</label>
-    <video id="video" autoplay></video>
-    <canvas id="fotoCanvas" style="display:none;"></canvas>
-    <input type="hidden" id="fotoBase64">
+        <label for="video">Foto (se toma automáticamente):</label>
+        <video id="video" autoplay></video>
+        <canvas id="fotoCanvas" style="display:none;"></canvas>
+        <input type="hidden" id="fotoBase64">
 
-    <button type="submit">Registrar</button>
-  </form>
+        <button type="submit">Registrar</button>
+    </form>
 
-  <div id="resumen"></div>
+    <div id="resumen"></div>
 
-  <script>
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('fotoCanvas');
-    const context = canvas.getContext('2d');
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyn--DNaur-r1Nld13BpQYicMetgEFXm5kJ2EvP7T-HHO0ky8lmbOrK7NobJvB6g3DItQ/exec'; // 🔁 Reemplaza con tu URL de Google Apps Script
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('fotoCanvas');
+        const context = canvas.getContext('2d');
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbyn--DNaur-r1Nld13BpQYicMetgEFXm5kJ2EvP7T-HHO0ky8lmbOrK7NobJvB6g3DItQ/exec'; // 🔁 Reemplaza con tu URL de Google Apps Script
 
-    // Activar cámara
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => video.srcObject = stream)
-      .catch(() => alert("No se pudo acceder a la cámara."));
+        // Activar cámara trasera
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(stream => video.srcObject = stream)
+            .catch(() => alert("No se pudo acceder a la cámara trasera."));
 
-    document.getElementById('registroForm').addEventListener('submit', function (e) {
-      e.preventDefault();
+        document.getElementById('registroForm').addEventListener('submit', function (e) {
+            e.preventDefault();
 
-      const nombre = document.getElementById('nombre').value;
-      const tipo = document.getElementById('tipo').value;
-      const fecha = new Date().toISOString().split('T')[0];
-      const hora = new Date().toLocaleTimeString('es-ES', { hour12: false }); // 24h
-      const clave = `${nombre}_${fecha}_${tipo}`;
+            const empleadosSeleccionados = Array.from(document.querySelectorAll('input[name="empleado"]:checked'))
+                .map(checkbox => checkbox.value);
 
-      if (localStorage.getItem(clave)) {
-        alert(`Ya registraste tu ${tipo.toLowerCase()} hoy.`);
-        return;
-      }
-
-      // Capturar foto
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const fotoBase64 = canvas.toDataURL("image/jpeg");
-
-      // Capturar ubicación
-      navigator.geolocation.getCurrentPosition(pos => {
-        const gps = `${pos.coords.latitude.toFixed(4)},${pos.coords.longitude.toFixed(4)}`;
-
-        const datos = new URLSearchParams({
-          Nombre: nombre,
-          TipoJornada: tipo,
-          Fecha: fecha,
-          Hora: hora,
-          GPS: gps,
-          Foto: fotoBase64
-        });
-
-        fetch(scriptURL, { method: 'POST', body: datos })
-          .then(res => res.json())
-          .then(data => {
-            if (data.status === 'success') {
-              localStorage.setItem(clave, hora);
-              document.getElementById('resumen').innerHTML = `
-                ✅ <strong>Registro exitoso</strong><br>
-                <b>Empleado:</b> ${nombre}<br>
-                <b>Jornada:</b> ${tipo}<br>
-                <b>Hora:</b> ${hora}<br>
-                <b>Ubicación:</b> ${gps}<br><br>
-                <b>Resumen del día:</b><br>${data.resumen}
-              `;
-              document.getElementById('registroForm').reset();
-            } else {
-              alert("Error: " + data.message);
+            if (empleadosSeleccionados.length === 0) {
+                alert("Por favor, selecciona al menos un empleado.");
+                return;
             }
-          });
-      }, () => alert("No se pudo obtener la ubicación."));
-    });
-  </script>
+
+            const tipo = document.getElementById('tipo').value;
+            const fecha = new Date().toISOString().split('T')[0];
+            const hora = new Date().toLocaleTimeString('es-ES', { hour12: false }); // 24h
+
+            // Capturar foto
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const fotoBase64 = canvas.toDataURL("image/jpeg");
+
+            // Capturar ubicación
+            navigator.geolocation.getCurrentPosition(pos => {
+                const gps = `${pos.coords.latitude.toFixed(4)},${pos.coords.longitude.toFixed(4)}`;
+
+                empleadosSeleccionados.forEach(nombre => {
+                    const clave = `${nombre}_${fecha}_${tipo}`;
+
+                    if (localStorage.getItem(clave)) {
+                        alert(`${nombre} ya registró su ${tipo.toLowerCase()} hoy.`);
+                        return; // Skip to the next employee if already registered
+                    }
+
+                    const datos = new URLSearchParams({
+                        Nombre: nombre,
+                        TipoJornada: tipo,
+                        Fecha: fecha,
+                        Hora: hora,
+                        GPS: gps,
+                        Foto: fotoBase64
+                    });
+
+                    fetch(scriptURL, { method: 'POST', body: datos })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                localStorage.setItem(clave, hora);
+                                document.getElementById('resumen').innerHTML += `
+                                    ✅ <strong>Registro exitoso para ${nombre}</strong><br>
+                                    <b>Jornada:</b> ${tipo}<br>
+                                    <b>Hora:</b> ${hora}<br>
+                                    <b>Ubicación:</b> ${gps}<br><br>
+                                `;
+                                // Note: The resumen for the day will likely only reflect the last processed employee in this loop.
+                                // Consider a different way to display the overall summary if needed.
+                            } else {
+                                alert(`Error al registrar a ${nombre}: ` + data.message);
+                            }
+                        });
+                });
+
+                // Clear the form and display the overall resumen after processing all selected employees
+                document.getElementById('registroForm').reset();
+                // Fetch and display the day's resumen here if the Google Apps Script provides it in each response.
+                // If the resumen is cumulative, the last response will contain it.
+                fetch(scriptURL + "?resumen_hoy=true&fecha=" + fecha) // Example: Adjust your Apps Script to handle this
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.resumen_general) {
+                            document.getElementById('resumen').innerHTML += `<br><b>Resumen del día:</b><br>${data.resumen_general}`;
+                        }
+                    });
+
+            }, () => alert("No se pudo obtener la ubicación."));
+        });
+    </script>
 
 </body>
 </html>

@@ -63,6 +63,21 @@
             border: 1px solid #ccc;
         }
 
+        #captureBtn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        #captureBtn:hover {
+            background-color: #45a049;
+        }
+
         #resumen {
             margin-top: 20px;
             padding: 15px;
@@ -71,15 +86,8 @@
             border-radius: 6px;
         }
 
-        button {
-            background-color: #007bff;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #0056b3;
+        #fotoCanvas {
+            display: none;
         }
     </style>
 </head>
@@ -111,9 +119,10 @@
             <option value="Salida">Salida</option>
         </select>
 
-        <label for="video">Foto (se toma automáticamente):</label>
+        <label for="video">Vista de la cámara:</label>
         <video id="video" autoplay></video>
-        <canvas id="fotoCanvas" style="display:none;"></canvas>
+        <button type="button" id="captureBtn">Capturar Foto</button>
+        <canvas id="fotoCanvas"></canvas>
         <input type="hidden" id="fotoBase64">
 
         <button type="submit">Registrar</button>
@@ -125,15 +134,31 @@
         const video = document.getElementById('video');
         const canvas = document.getElementById('fotoCanvas');
         const context = canvas.getContext('2d');
+        const captureBtn = document.getElementById('captureBtn');
         const scriptURL = 'https://script.google.com/macros/s/AKfycbyn--DNaur-r1Nld13BpQYicMetgEFXm5kJ2EvP7T-HHO0ky8lmbOrK7NobJvB6g3DItQ/exec'; // 🔁 Reemplaza con tu URL de Google Apps Script
+        let fotoTomada = false;
 
         // Activar cámara trasera
         navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
             .then(stream => video.srcObject = stream)
             .catch(() => alert("No se pudo acceder a la cámara trasera."));
 
+        captureBtn.addEventListener('click', function() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            document.getElementById('fotoBase64').value = canvas.toDataURL("image/jpeg");
+            fotoTomada = true;
+            alert("Foto capturada. Ahora puedes registrar.");
+        });
+
         document.getElementById('registroForm').addEventListener('submit', function (e) {
             e.preventDefault();
+
+            if (!fotoTomada) {
+                alert("Por favor, captura una foto antes de registrar.");
+                return;
+            }
 
             const empleadosSeleccionados = Array.from(document.querySelectorAll('input[name="empleado"]:checked'))
                 .map(checkbox => checkbox.value);
@@ -146,12 +171,7 @@
             const tipo = document.getElementById('tipo').value;
             const fecha = new Date().toISOString().split('T')[0];
             const hora = new Date().toLocaleTimeString('es-ES', { hour12: false }); // 24h
-
-            // Capturar foto
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const fotoBase64 = canvas.toDataURL("image/jpeg");
+            const fotoBase64 = document.getElementById('fotoBase64').value;
 
             // Capturar ubicación
             navigator.geolocation.getCurrentPosition(pos => {
@@ -185,18 +205,19 @@
                                     <b>Hora:</b> ${hora}<br>
                                     <b>Ubicación:</b> ${gps}<br><br>
                                 `;
-                                // Note: The resumen for the day will likely only reflect the last processed employee in this loop.
-                                // Consider a different way to display the overall summary if needed.
                             } else {
                                 alert(`Error al registrar a ${nombre}: ` + data.message);
                             }
                         });
                 });
 
-                // Clear the form and display the overall resumen after processing all selected employees
+                // Clear the form and reset the fotoTomada flag
                 document.getElementById('registroForm').reset();
-                // Fetch and display the day's resumen here if the Google Apps Script provides it in each response.
-                // If the resumen is cumulative, the last response will contain it.
+                fotoTomada = false;
+                document.getElementById('fotoBase64').value = ""; // Clear the base64 data
+                document.getElementById('resumen').innerHTML = ""; // Clear previous resumen
+
+                // Fetch and display the day's resumen
                 fetch(scriptURL + "?resumen_hoy=true&fecha=" + fecha) // Example: Adjust your Apps Script to handle this
                     .then(res => res.json())
                     .then(data => {

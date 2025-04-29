@@ -76,7 +76,7 @@
         return;
       }
 
-      fetch("https://script.google.com/macros/s/AKfycby2lfG-x7O-Q-tei8eRTR8w-wocJzlLx4oNfjs6QIp0S4r9KxstMji1XUJIWA-L7JBBeA/exec", {
+      fetch('https://script.google.com/macros/s/AKfycby2lfG-x7O-Q-tei8eRTR8w-wocJzlLx4oNfjs6QIp0S4r9KxstMji1XUJIWA-L7JBBeA/exec', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ empleados, tipo, foto: fotoBase64 })
